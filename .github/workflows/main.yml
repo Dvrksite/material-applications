@@ -1,0 +1,46 @@
+name: Deployment Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # НОВЫЙ ЭТАП: Тестирование
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js (для фронтенда)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '16'
+
+      - name: Install dependencies and run tests
+        run: |
+          cd 3.1/example-frontend  # Укажи свой путь к фронтенду
+          npm install
+          npm test -- --watchAll=false # Запуск тестов в режиме CI
+
+  # ЭТАП СБОРКИ (теперь зависит от тестов)
+  build_and_push:
+    needs: test # ВАЖНО: сборка не начнется, пока job 'test' не станет зеленым
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./3.1/example-backend # Твой путь
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/devops-backend:latest
