@@ -1,0 +1,26 @@
+name: Deployment Pipeline
+
+on:
+  push:
+    branches:
+      - main  # Скрипт запустится, когда ты сделаешь push в ветку main
+
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4 # Скачивает твой код на сервер GitHub
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: . # Укажи путь к папе с Dockerfile (например ./example-backend)
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/my-app:latest
