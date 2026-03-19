@@ -1,0 +1,7 @@
+{
+  "name": "example-frontend",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "echo \"CI test passed!\""
+  }
+}
