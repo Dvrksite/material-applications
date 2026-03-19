@@ -1,12 +1,36 @@
-name: Publish to Docker Hub
+name: Deployment Pipeline
 
 on:
   push:
     branches:
       - main
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
 
 jobs:
-  build-and-push:
+  # ЗАДАНИЕ 3.2: Проверка кода перед сборкой
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '16'
+
+      - name: Install and Test Frontend
+        # Здесь мы заходим в папку задания и запускаем тесты
+        run: |
+          cd 3.1/example-frontend
+          npm install
+          npm test -- --watchAll=false
+
+  # ЗАДАНИЕ 3.1: Сборка образов и отправка на Docker Hub
+  build_and_push:
+    needs: test # Важно: сборка начнется только если тесты (job выше) прошли успешно
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -15,6 +39,7 @@ jobs:
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
+          # Проверь, что в GitHub Settings секреты названы именно ТАК
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
